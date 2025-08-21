@@ -2,6 +2,47 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Tareas pendientes (priorizadas)
+
+Lista corta de tareas acordadas y su prioridad — dejar visible antes de implementar cambios adicionales:
+
+- Prioridad alta
+	- Mover la lógica de expiración al servidor (cron/trigger/función programada en Supabase).
+	- Implementar suscripción Realtime para que la UI refleje cambios hechos en la BD inmediatamente.
+	- Enviar emails desde backend (Edge Function + SendGrid) al marcar enlaces como caducados.
+
+- Prioridad media
+	- Quitar logs inseguros (ej. console.log con API keys) y asegurar que se use la `anon` key en frontend.
+	- Mejorar UX: deshabilitar botones durante guardado, mostrar toasts/modales con cierre.
+
+- Prioridad baja
+	- Forzar tipos y constraints en la tabla `enlaces` (timestamptz, boolean NOT NULL con default, enum/check para `estado`).
+	- Añadir índices y campos de auditoría (`created_at`, `updated_at`).
+
+Marca las tareas completadas en esta lista cuando las implementemos para llevar seguimiento rápido.
+
+## Inicializar repo remoto
+
+Si querés crear el repo remoto y empujar este proyecto a GitHub sigue estos pasos locales:
+
+```powershell
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin git@github.com:<tu-usuario>/<tu-repo>.git
+git branch -M main
+git push -u origin main
+```
+
+Archivos y utilidades añadidas por este asistente:
+- `scripts/mark_expired.sql` — SQL para marcar expirados.
+- `functions/markExpired.js` — ejemplo de función programada para marcar expirados y notificar.
+- `functions/createEnvironment.js` — ejemplo de endpoint para provisionar entornos.
+- `functions/extendExpiration.js` — ejemplo para extender expiraciones y re-habilitar edición.
+- `docs/*.md` — documentación sobre scheduler, workflow, vercel read-only y extensión.
+
+
+
 ## Available Scripts
 
 In the project directory, you can run:

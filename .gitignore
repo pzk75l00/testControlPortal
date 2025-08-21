@@ -21,3 +21,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local env and build
+/.cache
+build/
+node_modules/
+.vscode/
+coverage/
