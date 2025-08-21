@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renderiza la UI principal', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // La UI está en español — comprobamos que el título principal esté presente
+  const titulo = screen.getByText(/Generar enlace de entorno/i);
+  expect(titulo).toBeInTheDocument();
 });
