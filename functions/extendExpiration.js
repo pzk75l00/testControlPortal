@@ -2,11 +2,10 @@
 // Edge Function example to extend an enlace's expiration and re-enable editable app in Vercel.
 
 import { createClient } from '@supabase/supabase-js';
-import fetch from 'node-fetch';
+import { setEditable } from './vercelAdapter';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY; // use service key in server
-const VERCEL_DEPLOY_HOOK_URL_EDITABLE = process.env.VERCEL_DEPLOY_HOOK_URL_EDITABLE; // optional: deploy editable branch
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false } });
 
@@ -43,13 +42,11 @@ export default async function handler(req, res) {
 
     if (upErr) throw upErr;
 
-    // Optionally trigger Vercel deploy to editable branch (if you use branch-based deploys)
-    if (VERCEL_DEPLOY_HOOK_URL_EDITABLE) {
-      try {
-        await fetch(VERCEL_DEPLOY_HOOK_URL_EDITABLE, { method: 'POST', body: JSON.stringify({ linkId: id }) });
-      } catch (e) {
-        console.error('Error triggering Vercel editable deploy hook', e);
-      }
+    // Trigger adapter to set project editable (deploy or flag)
+    try {
+      await setEditable({ linkId: id });
+    } catch (e) {
+      console.error('Error setting editable via adapter', e);
     }
 
     // Optionally, update a simple app_config table to indicate editable mode (if you prefer flags over deploys)

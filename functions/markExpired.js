@@ -4,6 +4,7 @@
 
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
+import { setReadOnly } from './vercelAdapter';
 
 // ENV variables expected in function runtime
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -46,13 +47,11 @@ export default async function handler(req, res) {
         }
       }
 
-      // Optional: trigger Vercel deploy to a read-only build if configured
-      if (VERCEL_DEPLOY_HOOK_URL_READONLY) {
-        try {
-          await fetch(VERCEL_DEPLOY_HOOK_URL_READONLY, { method: 'POST', body: JSON.stringify({ linkId: link.id }) });
-        } catch (e) {
-          console.error('Error triggering Vercel read-only deploy hook for link', link.id, e);
-        }
+      // Use adapter to set project read-only (deploy or flag)
+      try {
+        await setReadOnly({ linkId: link.id });
+      } catch (e) {
+        console.error('Error setting read-only via adapter for link', link.id, e);
       }
     }
 

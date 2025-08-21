@@ -1,8 +1,12 @@
 // functions/createEnvironment.js
 // Example server-side handler to provision an environment for a link.
 // This function should be deployed as an Edge Function and secured.
+// functions/createEnvironment.js
+// Example server-side handler to provision an environment for a link.
+// This function should be deployed as an Edge Function and secured.
 
 import { createClient } from '@supabase/supabase-js';
+import { provisionEnvironment } from './vercelAdapter';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -12,7 +16,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { pers
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const { id } = await req.json();
+    const body = await req.json();
+    const { id } = body || {};
     if (!id) return res.status(400).json({ error: 'Missing id' });
 
     // Lookup link
@@ -21,10 +26,11 @@ export default async function handler(req, res) {
     if (!rows || rows.length === 0) return res.status(404).json({ error: 'Link not found' });
     const link = rows[0];
 
-    // Provisioning logic placeholder (replace with real infra calls)
-    // e.g., call Terraform, Kubernetes, Docker, cloud API, etc.
-    // Simulate a provisioned URL
-    const provisionedUrl = `https://envs.example.com/${id}`;
+  // Use adapter to provision environment (Vercel for now)
+  const result = await provisionEnvironment(id, { templateProjectId: process.env.VERCEL_PROJECT_ID });
+  let provisionedUrl = null;
+  if (result && result.ok) provisionedUrl = result.url || (result.data && result.data.url) || null;
+  if (!provisionedUrl) provisionedUrl = `https://envs.example.com/${id}`;
 
     // Update DB to mark environment created
     const { error: upErr } = await supabase.from('enlaces').update({ entornoClienteCreado: true, url: provisionedUrl }).eq('id', id);

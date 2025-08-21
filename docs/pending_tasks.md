@@ -69,6 +69,54 @@ Este documento centraliza las tareas operativas y de desarrollo pendientes para 
      - Feature flag en DB (`app_readonly`): más simple y rápido (solo actualizar una fila en la DB y el frontend consulta el flag).
    - Responsable: Tú (decisión); yo implemento la opción elegida.
 
+   10) Envío de notificaciones por email cuando un enlace caduca (Prioridad: Alta)
+      - Estado: Pendiente (funciones de ejemplo añadidas en `functions/markExpired.js`)
+      - Responsable: Yo (implementación) / Tú (configuración de SendGrid)
+      - Requisitos: `SENDGRID_API_KEY`, `FROM_EMAIL` en secretos de funciones/servicio.
+      - Paso inmediato: configurar SendGrid (o provider equivalente), probar envío con un enlace de prueba.
+
+   11) Soporte de read-only / editable en Vercel (Prioridad: Alta)
+      - Estado: Pendiente
+      - Objetivo: que al caducar un enlace el proyecto deployado pase a modo read-only y al extender expiración vuelva a editable.
+      - Opciones técnicas:
+        - Deploy hooks: crear dos deploy hooks en Vercel (read-only / editable) y llamarlos desde `markExpired` y `extendExpiration`.
+        - Feature flag: usar una tabla `app_config` en Supabase con `app_readonly=true/false`; la app frontend consulta este flag y deshabilita acciones de escritura. (más simple)
+      - Requisitos: `VERCEL_DEPLOY_HOOK_URL_READONLY`, `VERCEL_DEPLOY_HOOK_URL_EDITABLE` o `app_config` en DB.
+
+   12) Provisión / clonado de entornos en Vercel / Firebase usando datos del usuario (Prioridad: Alta)
+      - Estado: Pendiente (ejemplo `functions/createEnvironment.js` en repo)
+      - Objetivo: crear un entorno de prueba para el cliente basado en plantilla/clonando variables de entorno y configuraciones, usando los datos del usuario (email/nombre/cliente).
+      - En Vercel: flujo recomendado
+        1. Tener un proyecto plantilla con variables env en Team/Project.
+        2. Crear un nuevo deployment o duplicar configuración usando Vercel API (requiere `VERCEL_TOKEN` y `VERCEL_PROJECT_ID`) o crear un git branch y disparar deploy.
+        3. Guardar la URL resultante en `enlaces.url` y marcar `entornoClienteCreado=true`.
+      - En Firebase: usar Firebase Hosting APIs o `firebase deploy --project` con variables configuradas; requiere `FIREBASE_TOKEN`.
+      - Requisitos: `VERCEL_TOKEN`, `VERCEL_PROJECT_ID`, `FIREBASE_TOKEN` (según provider).
+
+   13) Flujo de entrega al cliente y transferencia a su repo (Prioridad: Media)
+      - Estado: Pendiente
+      - Objetivo: entregar el proyecto de Vercel al cliente para que pruebe y, si aprueba, transferir el código/infra a su repositorio/organización.
+      - Pasos sugeridos:
+        1. Proveer al cliente el enlace del deployment en Vercel para pruebas (entorno temporal).
+        2. Si el cliente aprueba, crear un proceso de transferencia:
+           - Opción A: Transferir el repositorio (GitHub transfer ownership) y actualizar variables/Secrets en Vercel con credenciales del cliente.
+           - Opción B: Exportar configuración (README con variables/envs) y abrir PR en el repo del cliente con los cambios/instrucciones de deploy.
+        3. Documentar pasos para el cliente (README con variables necesarias, instrucciones de deploy y cómo regenerar entornos de prueba).
+      - Requisitos: coordinación con el cliente, permisos en GitHub/Vercel para transferir repositorio o crear PR.
+
+   ## Requisitos operativos para estos flujos
+   - Secrets / env vars que debes añadir en el entorno de funciones / Vercel / Supabase:
+     - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `REACT_APP_SUPABASE_KEY`
+     - `SENDGRID_API_KEY`, `FROM_EMAIL`
+     - `VERCEL_TOKEN`, `VERCEL_PROJECT_ID`, `VERCEL_DEPLOY_HOOK_URL_READONLY`, `VERCEL_DEPLOY_HOOK_URL_EDITABLE`
+     - `FIREBASE_TOKEN` (opcional)
+
+   - Seguridad: nunca exponer `SUPABASE_SERVICE_KEY` ni `VERCEL_TOKEN` en el frontend; deben residir en secretos de funciones/CI.
+
+   ## Paso inmediato recomendado
+   - Priorizar: 1) configurar SendGrid y probar `markExpired` en staging; 2) decidir deploy-hook vs feature-flag; 3) implementar `createEnvironment` para Vercel (o Firebase) y probar con un deployment template.
+
+
 ## Contrato de trabajo mínimo
 - Inputs: acceso al repo (ya), secrets en GitHub/Supabase, URL de Supabase.
 - Outputs: build limpio, tests mínimos, job programado para expirados, endpoints desplegados.
